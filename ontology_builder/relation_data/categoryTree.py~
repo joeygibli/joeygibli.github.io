@@ -1,0 +1,74 @@
+import urllib2
+import json
+import time
+import sys
+import codecs
+
+template = "https://en.wikipedia.org/w/api.php?format=json&action=query&prop=categories&cllimit=max&titles=%s"
+def titleFromLink(link):
+    if link.find("<")==0: link = link[1:-1]
+    return link.split("/")[-1].split("#")[0]
+PREFIX="Category:"
+
+def fetchCategoryData(query=None,title=None):
+    if not query:
+        query = template % title
+    response = urllib2.urlopen(urllib2.Request(query,headers={'User-Agent':'GNAT/0.3 (krivard@cs.cmu.edu)'}))
+    sdata = response.read()
+    data = json.loads(sdata)
+    return data
+
+if __name__=='__main__':
+    skip = 0
+    if len(sys.argv)<3:
+        print "Usage:\n\t%s input.tsv output.tsv [skipN]\ninput fields:tid, tname, link/uri, metadata(igored)\noutput fields: tid, catname" % sys.argv[0]
+        sys.exit(1)
+    infile,outfile = sys.argv[1:3]
+    print "Reading from %s, writing to %s" % (infile,outfile)
+    if len(sys.argv)>3:
+        skip = int(sys.argv[-1])
+        print "Skipping %d queries..." % skip
+    with open(infile,"r") as f,open(outfile,"w" if skip==0 else "a") as o:
+        last = time.time()-1
+        lastEntity = ("","")
+        for line in f:
+            (tid,tname,wplink,meta) = line.strip().split("\t",3)
+            title = titleFromLink(wplink)
+            now = (tid,title)
+            if now == lastEntity: continue
+            lastEntity = now
+            if skip>0: 
+                skip = skip-1
+                continue
+            dt = time.time()-last
+            if dt < 1: time.sleep(1-dt) # query at 1 Hz
+            query = template % title
+            print "%s %s ... " % (title,query),
+            data = fetchCategoryData(query=query)
+            last = time.time()
+            n=0
+            if 'query' not in data or 'pages' not in data['query']:
+                print "Trouble with query '%s':" % title
+                print data
+                break
+            for page in data['query']['pages'].values():
+                if 'pageid' not in page: 
+                    page['pageid'] = "N/A"
+                    page['title'] = "N/A"
+                info = "#\t%s\n" % "\t".join([tid,tname,str(page['pageid']),page['title']])
+                o.write( info.encode("utf-8") )
+                if 'categories' not in page: continue
+                for cat in page['categories']:
+                    foo = cat['title']
+                    if foo.startswith(PREFIX): foo = foo[len(PREFIX):]
+                    try:
+                        o.write(tid)
+                        o.write("\t")
+                        o.write(foo.encode("utf-8"))
+                        o.write("\n")
+                    except UnicodeEncodeError:
+                        print tid,type(tid)
+                        print foo,type(foo)
+                        raise
+                    n+=1
+            print "%d categories" % n

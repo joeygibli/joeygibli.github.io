@@ -1,0 +1,28 @@
+var config = {
+    width:800,
+    height:700,
+    linkdistance:60,
+    linkcharge:400,
+};
+
+var model = {
+};
+
+var init = function() {
+    model.
+    d3.tsv("relation_data/catrel.tsv") // get the data from file
+	.row(function(pair) {
+	    model
+	    return pair;
+	})
+	.get(function(error,catpairs) { // handle the data
+	    model.
+	});
+		
+		
+};
+
+init();
+
+
+

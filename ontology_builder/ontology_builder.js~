@@ -1,0 +1,327 @@
+// Initial modified script (with node coloring): http://bl.ocks.org/d3noob/8043434
+// Force Layout information: 
+// Probably useful for color: https://gist.github.com/mbostock/3014589
+
+var config = {
+    edgeMod:'altKey',
+    width:1000,
+    height:700,
+    linkdistance:60,
+    edgeStyle:'straight',
+};
+
+var next_id=0;
+// Set the range
+var  v = d3.scale.linear().range([0, 100]);
+
+var model = {
+    nodes : {},
+    graph : {},
+    force : false,
+    links : false,
+    path : false,
+    node : false,
+    svg : false,
+    // support for edge add/removal
+    add_source : null,
+    add_target : null
+}
+
+var uniqueNode = function(name) {
+    return model.nodes[name] || (model.nodes[name] = {name:name,id:(next_id+=1)});
+};
+var connect = function(src,dst) {
+    if (!(src.name in model.graph)) { model.graph[src.name] = {}; }
+    model.graph[src.name][dst.name] = true;
+};
+var disconnect = function(src,dst) {
+    delete model.graph[src.name][dst.name];
+};
+var connected = function(src,dst) {
+    return (dst.name in model.graph[src.name]);
+}
+
+// add the edges //curvy lines
+function tick() {
+    if (!model.path) { return; }
+    if (!model.node) { return; }
+    model.path.attr("d", function(d) {
+	var dx = d.target.x - d.source.x,
+	dy = d.target.y - d.source.y,
+	dr = Math.sqrt(dx * dx + dy * dy)*1.5;
+	var ret = "M" + 
+	    d.source.x + ",";
+	
+	if (config.edgeStyle=="straight") {// straight paths:
+	    ret = ret + d.source.y + "L";
+	} else {	    
+	    // curved paths:
+	    ret =  ret + d.source.y + "A" + 
+		dr + "," + dr + " 0 0,1 ";
+	}
+	
+	return ret + d.target.x + "," + 
+	    d.target.y;
+    });
+    model.node
+	.attr("transform", function(d) { 
+	    return "translate(" + d.x + "," + d.y + ")"; });
+}
+// redraw paths between nodes
+function drawPaths() {
+    model.svg.append("svg:defs").selectAll("marker")
+	  .data(["end"])      // Different link/path types can be defined here
+      .enter().append("svg:marker")    // This section adds in the arrows
+	.attr("id", String)
+	.attr("viewBox", "0 -5 10 10")
+	.attr("refX", 15)
+	.attr("refY", 0)
+	.attr("markerWidth", 6)
+	.attr("markerHeight", 6)
+	.attr("orient", "auto")
+      .append("svg:path")
+	.attr("d", "M0,-5L10,0L0,5");
+
+    model.path = model.svg.append("svg:g").selectAll("path")
+		.data(model.force.links())
+	      .enter().append("svg:path")
+		.attr("class", function(d) { return "link " + d.type; })
+		.attr("marker-end", "url(#end)");
+}
+// action to take on mouse double click
+function dblclick(d) {
+    d3.select(this).classed("fixed", d.fixed = false);
+    d3.select(this).select("circle").style("stroke", "grey");
+}
+// make nodes fixed when dragged
+function dragstart(d) {
+  d3.select(this).classed("fixed", d.fixed = true);
+  d3.select(this).select("circle").style("stroke", "firebrick");
+}
+
+var drag = function() {}
+
+// turn off any node hilighting
+function resetNodeFill(n) {
+    d3.select("#node_"+n.id).select("circle").style("fill","grey");
+}
+
+// clear state of edge selection machinery
+function clearEdgeMod() {
+    if (model.add_source) {
+	resetNodeFill(model.add_source);
+    }
+    model.add_source = null;
+    if (model.add_target) {
+	resetNodeFill(model.add_target);
+    }
+    model.add_target = null;
+}
+
+// handle click events
+function clicked(d) {
+  // remove nodes when click with shift key
+  if(d3.event.shiftKey) {
+    model.links = model.links.filter(function(link) {
+      return !(link.source == d || link.target == d);
+    });
+    d3.values(model.nodes).filter(function(n) {
+      return n != d.name;
+    });
+    model.force.nodes(d3.values(model.nodes));
+    model.force.links(model.links);
+
+    d3.selectAll("path").remove();
+    drawPaths();
+
+    d3.select(this).select("circle").transition()
+	.duration(600)
+	.attr("r", 0)
+	.remove();
+    d3.select(this).select("text").transition()
+	.remove();
+  }
+
+  // add or remove edges when alt is pressed
+  if(d3.event[config.edgeMod]) {
+    if (model.add_source == null) {
+      model.add_source = d;
+      d3.select(this).select("circle").style("fill","cyan");
+      console.log("src: " + d.name + " x = " + d.x + ", y = " + d.y);
+    } else if (model.add_target == null && d != model.add_source) {
+      model.add_target = d;
+      d3.select(this).select("circle").style("fill","cyan");
+      console.log("dst: " + d.name + " x = " + d.x + ", y = " + d.y);
+      var edge_exists = -1;
+      if (connected(model.add_source,model.add_target)) {
+	for (var i = 0; i < model.links.length; i++) {
+	  if (model.links[i].source == model.add_source && model.links[i].target == model.add_target) {
+	    edge_exists = i;
+	    break;
+	  }
+	}
+	  console.log("edge exists at "+edge_exists);
+	  console.log(model.graph[model.add_source]);
+	// note: when modifying edges stop force layout to avoid calucation errors
+	model.force.stop();
+	model.links.splice(edge_exists, 1);
+	disconnect(model.add_source,model.add_target);
+	console.log("removing");
+      } else {
+	model.force.stop();
+	model.links.push({source: model.add_source, target: model.add_target, value:1.0, type: "onezerozero"});
+	connect(model.add_source,model.add_target);
+	console.log("adding");
+
+      }
+      clearEdgeMod();
+      d3.selectAll("path").remove();
+      model.force.links(model.links);
+      drawPaths();
+      model.force.start();
+    }
+  }
+}
+
+function updateEdgeSelect() {
+    config.edgeMod = document.getElementById("edgeselect").value;
+    document.getElementById("edgeselectDoc").innerHTML = config.edgeMod.slice(0,config.edgeMod.length-3);
+}
+function updateLinkLength() {
+    if (!model.force) { return; }
+    config.linkdistance = document.getElementById("linklength").value;
+    model.force.stop();
+    model.force.linkDistance(config.linkdistance);
+    model.force.start();
+}
+function updateEdgeStyle(s) {
+    console.log(s);
+    model.force.stop();
+    config.edgeStyle=s
+    model.force.start();
+}
+
+var init = function() {
+    // define parameters for force layout
+    model.force = d3.layout.force()
+	.size([config.width, config.height])
+	.linkDistance(config.linkdistance) // min distance of links
+    //.linkStrength(function(link) { return link.value*2 }) // lower strength means link isn't as rigid [0,1]
+	.charge(-400) // amount nodes repell each other
+	.chargeDistance(250) // how far the charge takes effect
+	.friction(.5) // higher frictions means nodes move around less [0,1]
+	.on("tick", tick);
+    model.svg = d3.select("#display").append("svg")
+	.attr("width", config.width)
+	.attr("height", config.height);
+    // make fixed when node is dragged
+    drag = model.force.drag()
+	.on("dragstart", dragstart);
+    document.getElementById("edgeselect").value = config.edgeMod;
+    document.getElementById("linklength").value = config.linkdistance;
+}
+
+var load = function(filepath) {
+  model.nodes = {};
+  model.graph = {};
+  next_id=0;
+
+  d3.csv(filepath) // get the data from file
+      .row(function(link) { // parse
+	  var ret = { // Compute the distinct nodes from the links.
+	  source: uniqueNode(link.source),
+	  target: uniqueNode(link.target),
+	  value: +link.value,
+	  type:"na"};
+	  connect(ret.source,ret.target);
+	  return ret;
+      }).get(function(error, links) { //process
+      if (error) { console.log("Error: "+error); }
+
+      model.links = links;
+
+      // insert data into force layout
+      model.force.stop();
+      model.force.nodes(d3.values(model.nodes)) // data used for the nodes
+	  .links(model.links) // data used for the links
+	  .start();
+
+
+
+      // Scale the range of the data
+      v.domain([0, d3.max(model.links, function(d) { return d.value; })]);
+
+      // asign a type per value to encode opacity
+      // model.links.forEach(function(link) {
+      // 	      var s = v(link.value);
+      // 	      if (s <= 25) {
+      // 		      link.type = "twofive";
+      // 	      } else if (s <= 50 && s > 25) {
+      // 		      link.type = "fivezero";
+      // 	      } else if (s <= 75 && s > 50) {
+      // 		      link.type = "sevenfive";
+      // 	      } else if (s <= 100 && s > 75) {
+      // 		      link.type = "onezerozero";
+      // 	      } else {
+      // 		      link.type = "invalid";
+      // 	      }
+      // });
+
+
+      // build the arrow.
+      model.svg.append("svg:defs").selectAll("marker")
+	  .data(["end"])      // Different link/path types can be defined here
+	.enter().append("svg:marker")    // This section adds in the arrows
+	  .attr("id", String)
+	  .attr("viewBox", "0 -5 10 10")
+	  .attr("refX", 15)
+	  .attr("refY", -1.5)
+	  .attr("markerWidth", 6)
+	  .attr("markerHeight", 6)
+	  .attr("orient", "auto")
+	.append("svg:path")
+	  .attr("d", "M0,-5L10,0L0,5");
+
+      // add the links and the arrows
+      model.path = model.svg.append("svg:g").selectAll("path")
+	  .data(model.force.links())
+	.enter().append("svg:path")
+	  .style("opacity",function(d) { return d.value; })
+	  .attr("class", "link")
+	  //.attr("class", function(d) { return "link " + d.type; })
+	  .attr("marker-end", "url(#end)");
+      // define the nodes
+      model.node = model.svg.selectAll(".node")
+	  .data(model.force.nodes())
+	.enter().append("g")
+	  .attr("class", "node")
+	  .attr("id",function(d) { return "node_" + d.id; })
+	  .on("dblclick", dblclick)
+	  .call(drag)
+	  .on("click",clicked);
+
+      // add the nodes
+      model.node.append("circle")
+	  .attr("r", 5)
+	  .style("fill", "grey");
+
+
+      // add the text 
+      model.node.append("text")
+	  .attr("x", 12)
+	  .attr("dy", ".35em")
+	  .text(function(d) { return d.name; });
+
+
+      d3.select("#display")
+	  .on("keyup", clearEdgeMod);
+
+
+  });
+
+}
+
+init();
+load("test.csv");
+
+ 

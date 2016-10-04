@@ -1,0 +1,6 @@
+var config = {
+    width:800,
+    height:700,
+    linkdistance:60,
+    linkcharge:400,
+};

@@ -1,0 +1,47 @@
+body {background:#eeeeee}
+div {font-size:10pt; font-family:Verdana, Arial, sans-serif}
+
+path.link {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1.5px;
+}
+ 
+path.link.twofive {
+  opacity: 0.25;
+}
+ 
+path.link.fivezero {
+  opacity: 0.50;
+}
+ 
+path.link.sevenfive {
+  opacity: 0.75;
+}
+ 
+path.link.onezerozero {
+  opacity: 1.0;
+}
+
+path.link.na {
+  color: yellow;
+}
+
+path.link.invalid {
+  color: purple;
+}
+ 
+circle {
+  fill: grey;
+  stroke: grey;
+  stroke-width: 1.5px;
+}
+ 
+text {
+  fill: #000;
+  font: 10px sans-serif;
+  pointer-events: none;
+} 
+
+
+svg {background:#ffffff}

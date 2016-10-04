@@ -1,0 +1,57 @@
+source,target,value
+Thing,Device,0.166667
+Thing,Markup Langauges,0.166667
+Thing,Control Flow,0.166667
+Software,Software Development Tools,0.332704
+Software,Web Applications,0.173913
+Programming Language,Markup Langauges,0.333333
+Programming Language,Type Theory,0.333333
+Programming Language,Functional Languages,0.333333
+Company,Computer Memory,0.333333
+Work,Algorithm,0.250000
+Database,SQL,0.333333
+Cross Platform Software,C++,0.153846
+Scripting Languages,Functional Languages,0.250000
+Algorithm,Work,0.500000
+Algorithm,Control Flow,0.500000
+Software Testing,XML,0.166667
+Free,Search Problem,0.500000
+C,Computer File Formats,0.250000
+C,Type Theory,0.250000
+Object Oriented Programming,Type Theory,0.500000
+Apache Software Foundation,Search Problem,0.333333
+Markup Langauges,Web Hosting,0.250000
+World Wide Web,Computer File Formats,0.200000
+World Wide Web,Markup Langauges,0.200000
+World Wide Web,Search Problem,0.200000
+Network Protocol,Internet Protocols,0.214286
+Internet Protocols,Network Protocol,0.321429
+Internet Protocols,Computer Network Security,0.166667
+Internet Protocols,Systems Engineering,0.166667
+PHP,Markup Langauges,0.250000
+Data Managment,Database,0.190476
+C++,Google,0.166667
+Type Theory,Object Oriented Programming,0.250000
+.NET Framework,Control Flow,0.200000
+Search Problem,Free,0.250000
+Compilers and Interpreters,Computer Memory,0.333333
+Software Standards,Computer File Formats,0.250000
+HTML,Web Hosting,0.285714
+HTML,Web Browsers,0.166667
+Computer Memory,Digital Signal Processing,0.250000
+Control Flow,Algorithm,0.250000
+Google,C++,0.166667
+Data Transmition,Web Hosting,0.166667
+Data Transmition,Digital Signal Processing,0.166667
+Web Hosting,Markup Langauges,0.500000
+Web Hosting,Data Transmition,0.166667
+Web Hosting,Web Browsers,0.444444
+Web Browsers,Markup Langauges,0.333333
+Web Browsers,Web Hosting,0.666667
+Software Development Tools,Software,0.216981
+Functional Programming,Functional Languages,0.500000
+Functional Languages,Functional Programming,0.250000
+Digital Signal Processing,Computer Memory,0.500000
+Digital Signal Processing,Data Transmition,0.166667
+Android,Virtual Reality,0.166667
+Android,Google,0.333333

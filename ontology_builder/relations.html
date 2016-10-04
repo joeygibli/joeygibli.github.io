@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.js"></script>
+<link rel="stylesheet" type="text/css" href="style.css"/>
+<style>
+</style>
+<title>GNAT Ontology Builder</title>
+</head>
+<body>
+  <div id="info" class="top">
+    <div id="help">
+    </div>
+    <div id="control">
+    </div>
+  </div>
+  <div id="display" class="top">
+  </div>
+  <div id="addpanel">
+
+      <!-- <div><input type="button" value="Auto arrange" onclick="autoArrange()"/></div> -->
+
+      <div><input type="button" value="Stop" onclick="model.force.stop()"/>
+      <input type="button" value="Resume" onclick="model.force.resume()"/></div>
+    
+      <select id="addchoice" size=10 multiple></select><br/>
+      <input id="addbutton" type="button" value="Add" onclick="addNodeFromList()" disabled/>
+      <input id="delbutton" type="button" value="Delete" style="float:right" onclick="deleteNodeFromList()" disabled/>
+  </div>
+
+<script src="relations_builder.js"></script>
+</body>
+</html>

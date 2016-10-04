@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<head>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.js"></script>
+<style>
+path.link {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1.5px;
+}
+ 
+path.link.twofive {
+  opacity: 0.25;
+}
+ 
+path.link.fivezero {
+  opacity: 0.50;
+}
+ 
+path.link.sevenfive {
+  opacity: 0.75;
+}
+ 
+path.link.onezerozero {
+  opacity: 1.0;
+}
+
+path.link.na {
+  color: yellow;
+}
+
+path.link.invalid {
+  color: purple;
+}
+ 
+circle {
+  fill: grey;
+  stroke: grey;
+  stroke-width: 1.5px;
+}
+ 
+text {
+  fill: #000;
+  font: 10px sans-serif;
+  pointer-events: none;
+} 
+
+body {background:#eeeeee}
+svg {background:#ffffff}
+div {font-size:10pt; font-family:Verdana, Arial, sans-serif}
+div.top {margin:.5em;}
+.control,#help {float:left;border:1pt solid black;height:120px}
+#help{width:320px;padding:5px 0 5px}
+#help ul{margin:0;padding:0}
+#help li{margin-left:1.5em}
+.control {width:315px;padding:5px 10px 5px 10px}
+label {margin-right:1em}
+.disabled {color:gray}
+#display {clear:both;float:left;width:800;height:700}
+#addpanel {float:left;width:200px;height:700px;margin-top:10px;border:1pt solid black}
+#addchoice {width:190px;margin-top:1em}
+</style>
+<title>GNAT Ontology Builder</title>
+</head>
+<body>
+  <div id="info" class="top">
+    <div id="help">
+      <ul>
+	<li>Click or drag nodes to anchor them.
+	<li>Double-click to release.
+	<li>Hold shift to delete a node.
+	<li>Hold <span id="edgeselectDoc">alt</span> and click endpoints to add/delete edges.
+      </ul>
+      <input type="button" value="Clear display" onclick="clearDisplay()"/>
+    </div>
+    <div id="control">
+      <form>
+	<div class="control">
+	  
+	  <div><label for="edgeselect">Edge select key:</label><select id="edgeselect" name="edgeselect" onchange="updateEdgeSelect()"><option value="altKey" selected>alt</option><option value="ctrlKey">ctrl</option></select></div>
+	  <div style="margin-top:.5em"><label for="linklength" style="margin-bottom:.5em;display:block;float:left">Link length:</label><input type="range" name="linklength" id="linklength" value=50 min=10 max=360 step=5 onchange="updateLinkLength()"/></div>
+	  <div style="margin-top:.5em"><label for="linkcharge" style="margin-bottom:.5em;display:block;float:left">Link charge:</label><input type="range" name="linkcharge" id="linkcharge" value=400 min=100 max=1000 step=20 onchange="updateLinkCharge()"/></div>
+	  <div style="clear:both"><label for="edgestyle">Link style:</label><input type="radio" name="edgestyle" value="straight" checked onchange="updateEdgeStyle(this.value)">Straight</input> <input type="radio" name="edgestyle" value="curved" onchange="updateEdgeStyle(this.value)">Curved</input></div>
+
+	</div>
+	<div class="control">
+	  
+	  <div><input type="button" value="Save as .tsv" onclick="save()"/></div>
+	  <div><label for="remotelinkfile">Remote link file:</label>
+	    <!-- <input type="text" name="remotelinkfile" id="remotelinkfile" value="test.csv"/> -->
+	    <select id="remotelinkfile" name="remotelinkfile"><option value="test.csv"/>test.csv</select>
+	    <input type="button" value="Load" onclick="loadLinks(document.getElementById('remotelinkfile').value)"/></div>
+	  <div><label for="remotenodefile">Remote node file:</label>
+	    <!-- <input type="text" name="remotenodefile" id="remotenodefile"/> -->
+	    <select id="remotenodefile" name="remotenodefile"><option value="linkcats.csv">linkcats.csv</option><option value="joincats.csv">joincats.csv</option></select>
+	    <input type="button" value="Load" onclick="loadNodes(document.getElementById('remotenodefile').value)"/></div>
+
+
+	  <div class="disabled" style="display:none">
+	    <div><input type="file" name="linkfile" id="linkfile" value="Upload link file" onclick="fetchLinkFile()"/></div>
+	    <div><input type="button" name="nodefile" id="nodefile" value="Upload node file" onclick="fetchNodeFile()"/></div>
+	  </div>
+	</div>
+      </form>
+    </div>
+  </div>
+  
+  <div id="display" class="top">
+  </div>
+  <div id="addpanel">
+
+      <div><input type="button" value="Auto arrange" onclick="autoArrange()"/></div>
+
+      <div><input type="button" value="Stop" onclick="model.force.stop()"/>
+      <input type="button" value="Resume" onclick="model.force.resume()"/></div>
+    
+      <select id="addchoice" size=10 multiple></select><br/>
+      <input id="addbutton" type="button" value="Add" onclick="addNodeFromList()" disabled/>
+      <input id="delbutton" type="button" value="Delete" style="float:right" onclick="deleteNodeFromList()" disabled/>
+  </div>
+
+
+<script src="ontology_builder.js"></script>
+</body>
+</html>

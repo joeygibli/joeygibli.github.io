@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.js"></script>
+<style>
+ 
+path.link {
+  fill: none;
+  stroke: #666;
+  stroke-width: 1.5px;
+}
+ 
+path.link.twofive {
+  opacity: 0.25;
+}
+ 
+path.link.fivezero {
+  opacity: 0.50;
+}
+ 
+path.link.sevenfive {
+  opacity: 0.75;
+}
+ 
+path.link.onezerozero {
+  opacity: 1.0;
+}
+ 
+circle {
+  fill: #ccc;
+  stroke: #fff;
+  stroke-width: 1.5px;
+}
+ 
+text {
+  fill: #000;
+  font: 10px sans-serif;
+  pointer-events: none;
+}
+ 
+</style>
+<body>
+<script>
+// Initial modified script (with node coloring): http://bl.ocks.org/d3noob/8043434
+// Force Layout information: 
+// Probably useful for color: https://gist.github.com/mbostock/3014589
+
+// get the data from file: formats into array called links
+d3.csv("test.csv", function(error, links) {
+ 
+var nodes = {};
+ 
+// Compute the distinct nodes from the links.
+links.forEach(function(link) {
+    link.source = nodes[link.source] || 
+        (nodes[link.source] = {name: link.source});
+    link.target = nodes[link.target] || 
+        (nodes[link.target] = {name: link.target});
+    link.value = +link.value;
+});
+ 
+var width = 960,
+    height = 500;
+
+// define parameters for force layout
+var force = d3.layout.force()
+    .nodes(d3.values(nodes)) // data used for the nodes
+    .links(links) // data used for the links
+    .size([width, height])
+    .linkDistance(60) // min distance of links
+    .linkStrength(function(link) { return link.value*2 }) // lower strength means link isn't as rigid [0,1]
+    .charge(-300) // amount nodes repell each other
+    .chargeDistance(250) // how far the charge takes effect
+    .friction(.5) // higher frictions means nodes move around less [0,1]
+    .on("tick", tick)
+    .start();
+
+// make fixed when node is dragged
+var drag = force.drag()
+   .on("dragstart", dragstart);
+
+// Set the range
+var  v = d3.scale.linear().range([0, 100]);
+ 
+// Scale the range of the data
+v.domain([0, d3.max(links, function(d) { return d.value; })]);
+ 
+// asign a type per value to encode opacity
+links.forEach(function(link) {
+	if (v(link.value) <= 25) {
+		link.type = "twofive";
+	} else if (v(link.value) <= 50 && v(link.value) > 25) {
+		link.type = "fivezero";
+	} else if (v(link.value) <= 75 && v(link.value) > 50) {
+		link.type = "sevenfive";
+	} else if (v(link.value) <= 100 && v(link.value) > 75) {
+		link.type = "onezerozero";
+	}
+});
+ 
+var svg = d3.select("body").append("svg")
+    .attr("width", width)
+    .attr("height", height);
+ 
+// build the arrow.
+svg.append("svg:defs").selectAll("marker")
+    .data(["end"])      // Different link/path types can be defined here
+  .enter().append("svg:marker")    // This section adds in the arrows
+    .attr("id", String)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", 15)
+    .attr("refY", -1.5)
+    .attr("markerWidth", 6)
+    .attr("markerHeight", 6)
+    .attr("orient", "auto")
+  .append("svg:path")
+    .attr("d", "M0,-5L10,0L0,5");
+ 
+// add the links and the arrows
+var path = svg.append("svg:g").selectAll("path")
+    .data(force.links())
+  .enter().append("svg:path")
+    .attr("class", function(d) { return "link " + d.type; })
+    .attr("marker-end", "url(#end)");
+// define the nodes
+var node = svg.selectAll(".node")
+    .data(force.nodes())
+  .enter().append("g")
+    .attr("class", "node")
+    .on("dblclick", dblclick)
+    .call(drag)
+    .on("click",clicked);
+ 
+// add the nodes
+node.append("circle")
+    .attr("r", 5)
+    .style("fill", "grey");
+
+ 
+// add the text 
+node.append("text")
+    .attr("x", 12)
+    .attr("dy", ".35em")
+    .text(function(d) { return d.name; });
+ 
+// add the curvy lines
+function tick() {
+    path.attr("d", function(d) {
+        var dx = d.target.x - d.source.x,
+            dy = d.target.y - d.source.y,
+            dr = Math.sqrt(dx * dx + dy * dy)*1.5;
+        return "M" + 
+            d.source.x + "," + 
+            d.source.y + "L" + 
+            //dr + "," + dr + " 0 0,1 " + NOTE: to make curved paths uncomment and replace "L" with "A"
+            d.target.x + "," + 
+            d.target.y;
+    });
+    node
+        .attr("transform", function(d) { 
+		    return "translate(" + d.x + "," + d.y + ")"; });
+}
+
+// redraw paths between nodes
+function drawPaths() {
+    svg.append("svg:defs").selectAll("marker")
+          .data(["end"])      // Different link/path types can be defined here
+      .enter().append("svg:marker")    // This section adds in the arrows
+        .attr("id", String)
+        .attr("viewBox", "0 -5 10 10")
+        .attr("refX", 15)
+        .attr("refY", 0)
+        .attr("markerWidth", 6)
+        .attr("markerHeight", 6)
+        .attr("orient", "auto")
+      .append("svg:path")
+        .attr("d", "M0,-5L10,0L0,5");
+
+    path = svg.append("svg:g").selectAll("path")
+                .data(force.links())
+              .enter().append("svg:path")
+                .attr("class", function(d) { return "link " + d.type; })
+                .attr("marker-end", "url(#end)");
+}
+// action to take on mouse double click
+function dblclick(d) {
+    d3.select(this).classed("fixed", d.fixed = false);
+    d3.select(this).select("circle").style("fill", "grey");
+}
+// make nodes fixed when dragged
+function dragstart(d) {
+  d3.select(this).classed("fixed", d.fixed = true);
+  d3.select(this).select("circle").style("fill", "firebrick");
+}
+
+var add_source = null,
+    add_target = null;
+
+d3.select("body")
+    .on("keyup", function() {
+      add_source = null;
+      add_target = null;
+    });
+
+// handle click events
+function clicked(d) {
+  // remove nodes when click with shift key
+  if(d3.event.shiftKey) {
+    links = links.filter(function(link) {
+      return !(link.source == d || link.target == d);
+    });
+    d3.values(nodes).filter(function(node) {
+      return node != d.name;
+    });
+    force.nodes(d3.values(nodes));
+    force.links(links);
+
+    d3.selectAll("path").remove();
+    drawPaths();
+
+    d3.select(this).select("circle").transition()
+        .duration(600)
+        .attr("r", 0)
+        .remove();
+    d3.select(this).select("text").transition()
+        .remove();
+  }
+
+  // add or remove edges when alt is pressed
+  if(d3.event.altKey) {
+  // add edges, remove edge if already exists
+    if (add_source == null) {
+      add_source = d;
+      console.log("pressed: " + d.name + " x = " + d.x + ", y = " + d.y);
+    } else if (add_target == null && d != add_source) {
+      add_target = d;
+      console.log("connected: " + d.name + " x = " + d.x + ", y = " + d.y);
+      var edge_exists = -1;
+      for (var i = 0; i < links.length; i++) {
+        if (links[i].source == add_source && links[i].target == add_target) {
+          edge_exists = i;
+          break;
+        }
+      }
+      if (edge_exists != -1) {
+        // note: when modifying edges stop force layout to avoid calucation errors
+        force.stop();
+        links.splice(edge_exists, 1);
+      } else {
+        force.stop();
+        links.push({source: add_source, target: add_target, type: "onezerozero"});
+      }
+      d3.selectAll("path").remove();
+      force.links(links);
+      drawPaths();
+      force.start();
+    }
+  }
+}
+
+});
+ 
+</script>
+</body>
+</html>
