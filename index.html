@@ -9,10 +9,19 @@
 <style>
 
 html {
-  background: url(img/background.svg) top right no-repeat fixed, -webkit-linear-gradient(left,pink,rgba(255,255,0,.5) 150%);
+  background: url(img/background.svg) right no-repeat fixed, -webkit-linear-gradient(left,pink,rgba(255,255,0,.5) 150%);
   -webkit-background-size: cover;
   font-family: helvetica;
   background-attachment: fixed;
+}
+
+@media (max-width: 480px) {
+  html {
+  background: -webkit-linear-gradient(left,pink,rgba(255,255,0,.5) 150%);
+  -webkit-background-size: cover;
+  font-family: helvetica;
+  background-attachment: fixed;
+  }
 }
 
 a {
