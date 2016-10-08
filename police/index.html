@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<body>
+<div id="option">
+  X-Axis: <select id="selectorX" onchange="updateX()">
+    <option value="race">Race</option>
+    <option value="date">Day of Week</option>
+    <option value="age">Age</option>
+  </select>
+  Y-Axis:<select id="selectorY" onchange="updateY()">
+    <option value="none">None</option>
+    <option value="race">Race</option>
+    <option value="date">Day of Week</option>
+    <option value="age">Age</option>
+  </select>
+</div>
+
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+
+var width = 1000,
+  height = 400,
+  radius = 3,
+  padding = 2, // separation between nodes
+  maxRadius = 6;
+
+var n = 800, // total number of nodes
+  races = ["White","Asian","Hispanic","Native American","Black","Other","Unknown"];
+
+var force = d3.layout.force();
+var color = d3.scale.ordinal()
+  .domain(races)
+  .range(["#EBB312","#D03B30","#53A96A","#DBCF4E","#C390C7","#B98A37","#1FACB8"]);
+
+var x = d3.scale.ordinal()
+  .domain(races)
+  .rangePoints([50, width-50], 1);
+
+var y = d3.scale.ordinal()
+  .domain(races)
+  .rangePoints([50, height-50], 1);
+
+
+var ageX = d3.scale.linear()
+  .domain([0,60])
+  .range([0, width-200]);
+
+var ageY = d3.scale.linear()
+  .domain([10,60])
+  .range([0, height-50]);
+
+var dateX = d3.scale.ordinal()
+  .domain(d3.range(0,7))
+  .rangePoints([50,width-50],1);
+
+var dateY = d3.scale.ordinal()
+  .domain(d3.range(0,7))
+  .rangePoints([50,height-50],1);
+
+var legend = d3.svg.axis()
+  .scale(x)
+  .orient("top")
+
+var format_date = d3.time.format("%m/%d/%y");
+
+var nodes = []
+d3.csv("data.csv", function (data) {
+  nodes = (data.map(function(d) {
+    return {
+      date: format_date.parse(d.date),
+      name: d.name,
+      race: d.race,
+      age: parseInt(d.age),
+      gender: d.gender,
+      state: d.state,
+      cx: x(d.race),
+      cy: height / 2
+    };
+  }))
+  runViz();
+});
+
+
+// var nodes = d3.range(n).map(function() {
+//   var i = Math.floor(Math.random() * m),
+//     v = (i + 1) / m * -Math.log(Math.random());
+//   return {
+//     radius: 3,
+//     color: color(i),
+//     cx: x(names[i]),
+//     cy: height / 2,
+//     id: Math.floor(Math.random() * 5),
+//     i: i
+//   };
+// });
+
+function runViz() {
+force
+  .nodes(nodes)
+  .size([width, height])
+  .gravity(0)
+  .charge(0)
+  .alpha(.1)
+  .on("tick", tick)
+  .start();
+
+var svg = d3.select("body").append("svg")
+  .attr("width", width)
+  .attr("height", height);
+
+var gLegend = svg.append("g")
+  .attr("class", "x axis")
+  .attr("transform", "translate(0, " + height * 0.9 + ")")
+  .call(legend);
+
+gLegend.selectAll(".tick text")
+  .attr("fill", function(d, i) {
+    return color(races[i]);
+  });
+
+
+var circle = svg.selectAll("circle")
+  .data(nodes)
+  .enter().append("circle")
+  .attr("r", function(d) {
+    return radius;
+  })
+  .style("fill", function(d) {
+    return color(d.race);
+  })
+  .call(force.drag);
+
+function tick(e) {
+  circle
+    .each(gravity(.2*e.alpha))
+    .each(collide(.5))
+    .attr("cx", function(d) {
+      return d.x;
+    })
+    .attr("cy", function(d) {
+      return d.y;
+    });
+}
+
+// Move nodes toward cluster focus.
+function gravity(alpha) {
+  return function(d) {
+    d.y += (d.cy - d.y) * alpha;
+    d.x += (d.cx - d.x) * alpha;
+  };
+}
+
+// Resolve collisions between nodes.
+function collide(alpha) {
+  var quadtree = d3.geom.quadtree(nodes);
+  return function(d) {
+    var r = radius + padding,
+      nx1 = d.x - r,
+      nx2 = d.x + r,
+      ny1 = d.y - r,
+      ny2 = d.y + r;
+    quadtree.visit(function(quad, x1, y1, x2, y2) {
+      if (quad.point && (quad.point !== d)) {
+        var x = d.x - quad.point.x,
+          y = d.y - quad.point.y,
+          l = Math.sqrt(x * x + y * y),
+          r = 2*radius + padding;
+        if (l < r) {
+          l = (l - r) / l * alpha;
+          d.x -= x *= l;
+          d.y -= y *= l;
+          quad.point.x += x;
+          quad.point.y += y;
+        }
+      }
+      return x1 > nx2 || x2 < nx1 || y1 > ny2 || y2 < ny1;
+    });
+  };
+}
+console.log(nodes);
+}
+
+var toggle = true
+function updateX() {
+  var string = d3.select("#selectorX").property("value")
+  if (string == "date") {
+    nodes.forEach(function(d,i) {
+      d.cx = dateX(d.date.getDay());
+    });
+  } else if (string == "age") {
+    nodes.forEach(function(d,i) {
+      var cx = ageX(d.age);
+      d.cx = cx == undefined || cx == 0 ? 900 : cx-10;
+    });
+  } else {
+    nodes.forEach(function(d,i) {
+      d.cx = x(d.race); 
+    });
+  }
+  force.alpha(.05);
+}
+
+function updateY() {
+  var string = d3.select("#selectorY").property("value")
+  if (string == "date") {
+    nodes.forEach(function(d,i) {
+      d.cy = dateY(d.date.getDay());
+    });
+  } else if (string == "race") {
+    nodes.forEach(function(d,i) {
+      d.cy = y(d.race); 
+    });
+  } else if (string == "age") {
+    nodes.forEach(function(d,i) {
+      var cy = ageY(d.age);
+      d.cy = cy == undefined || cy == 0 ? height-10 : cy;
+    });
+  } else {
+    nodes.forEach(function(d,i) {
+      d.cy = height/2; 
+    });
+  }
+  force.alpha(1)
+    .friction(.8);
+}
+
+</script>
