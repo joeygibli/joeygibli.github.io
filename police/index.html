@@ -26,6 +26,7 @@
     <option value="race">Race</option>
     <option value="date">Day of Week</option>
     <option value="age">Age</option>
+    <option value="population">City vs. Rural</option>
   </select>
   Y-Axis:<select id="selectorY" onchange="updateY()">
     <option value="none">None</option>
@@ -33,7 +34,7 @@
     <option value="date">Day of Week</option>
     <option value="age">Age</option>
   </select>
-  Notes: unknown values float to the right, ages start at 12, and days of week start on Sunday 
+  Notes: ages start at 12, and days of week start on Sunday, city (pop. > 100,000) on left and rural on right
 </div>
 
 <script src="//d3js.org/d3.v3.min.js"></script>
@@ -61,6 +62,9 @@ var y = d3.scale.ordinal()
   .domain(races)
   .rangePoints([50, height-50], 1);
 
+var split = d3.scale.ordinal()
+  .domain([true,false])
+  .rangePoints([0,width],1);
 
 var ageX = d3.scale.linear()
   .domain([10,60])
@@ -80,12 +84,22 @@ var dateY = d3.scale.ordinal()
 
 var legend = d3.svg.axis()
   .scale(x)
-  .orient("top")
+  .orient("top");
 
 var format_date = d3.time.format("%m/%d/%y");
 
+var cities = []
+d3.csv("city_population.csv", function (data) {
+  cities = (data.map(function(d) {
+    return d.name;
+  }))
+  console.log(cities);
+  get_data();
+});
+
 var nodes = []
-d3.csv("data.csv", function (data) {
+function get_data() {
+  d3.csv("data.csv", function (data) {
   nodes = (data.map(function(d) {
     return {
       date: format_date.parse(d.date),
@@ -94,26 +108,13 @@ d3.csv("data.csv", function (data) {
       age: parseInt(d.age),
       gender: d.gender,
       armed: d.armed,
+      city: major_city(d.city),
       cx: x(d.race),
       cy: height / 2
     };
   }))
   runViz();
-});
-
-
-// var nodes = d3.range(n).map(function() {
-//   var i = Math.floor(Math.random() * m),
-//     v = (i + 1) / m * -Math.log(Math.random());
-//   return {
-//     radius: 3,
-//     color: color(i),
-//     cx: x(names[i]),
-//     cy: height / 2,
-//     id: Math.floor(Math.random() * 5),
-//     i: i
-//   };
-// });
+})}
 
 function runViz() {
 force
@@ -218,6 +219,15 @@ function collide(alpha) {
 console.log(nodes);
 }
 
+function major_city(element) {
+  for (var i = 0; i < cities.length; i++) {
+    if (cities[i] == element) {
+      return true;
+    }
+  }
+  return false;
+}
+
 var toggle = true
 function updateX() {
   var string = d3.select("#selectorX").property("value")
@@ -229,6 +239,10 @@ function updateX() {
     nodes.forEach(function(d,i) {
       var cx = ageX(d.age);
       d.cx = cx == undefined || d.age == 0 || d.age > 60 ? 900 : cx;
+    });
+  } else if (string == "population") {
+    nodes.forEach(function(d,i) {
+      d.cx = split(d.city);
     });
   } else {
     nodes.forEach(function(d,i) {
