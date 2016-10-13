@@ -36,14 +36,14 @@
   </select>
   Notes: ages start at 12, and days of week start on Sunday, city (pop. > 100,000) on left and rural on right
 </div>
-
+<input type="checkbox" id="normalize" onclick="normalize()">Normalize <i>Size of circle corresponds to likelihood of being killed relative to white</i>
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script>
 
 var width = 1000,
   height = 400,
   radius = 3,
-  padding = 2, // separation between nodes
+  padding = 1, // separation between nodes
   maxRadius = 6;
 
 var n = 800, // total number of nodes
@@ -110,11 +110,14 @@ function get_data() {
       armed: d.armed,
       city: major_city(d.city),
       cx: x(d.race),
-      cy: height / 2
+      cy: height / 2,
+      radius: 3
     };
   }))
   runViz();
 })}
+
+var circle;
 
 function runViz() {
 force
@@ -145,7 +148,7 @@ gLegend.selectAll(".tick text")
   });
 
 
-var circle = svg.selectAll("circle")
+circle = svg.selectAll("circle")
   .data(nodes)
   .enter().append("circle")
   .attr("r", function(d) {
@@ -193,17 +196,17 @@ function gravity(alpha) {
 function collide(alpha) {
   var quadtree = d3.geom.quadtree(nodes);
   return function(d) {
-    var r = radius + padding,
-      nx1 = d.x - r,
-      nx2 = d.x + r,
-      ny1 = d.y - r,
-      ny2 = d.y + r;
+    var r = d.radius + maxRadius + padding,
+        nx1 = d.x - r,
+        nx2 = d.x + r,
+        ny1 = d.y - r,
+        ny2 = d.y + r;
     quadtree.visit(function(quad, x1, y1, x2, y2) {
       if (quad.point && (quad.point !== d)) {
         var x = d.x - quad.point.x,
-          y = d.y - quad.point.y,
-          l = Math.sqrt(x * x + y * y),
-          r = 2*radius + padding;
+            y = d.y - quad.point.y,
+            l = Math.sqrt(x * x + y * y),
+            r = d.radius + quad.point.radius + padding;
         if (l < r) {
           l = (l - r) / l * alpha;
           d.x -= x *= l;
@@ -275,5 +278,44 @@ function updateY() {
   force.alpha(1)
     .friction(.8);
 }
+
+d3.select("#normalize").on("change", function(d) {
+  var checked = d3.select(this).property("checked");
+  var newR = 0;
+  console.log("check?");
+  if (checked) {
+    console.log("CHECK!")
+    nodes.forEach(function(d,i) {
+      if (d.race == "White") {
+        newR = 2
+      } else if (d.race == "Black") {
+        newR = 5
+      } else if (d.race == "Hispanic") {
+        newR = 3
+      } else if (d.race == "Asian") {
+        newR = 2
+      } else if (d.race == "Native American") {
+        newR = 5
+      } else if (d.race == "Other") {
+        newR = 2
+      } else {
+        newR = 3
+      }
+      d.radius = newR;
+    })
+    circle.transition()
+      .duration(750)
+      .attr("r", function(d) { return d.radius; });  
+  } else {
+    nodes.forEach(function(d,i) {
+      d.radius = 3;
+    })
+    circle.transition()
+      .duration(750)
+      .attr("r", 3);
+  }
+  force.alpha(.05)
+})
+
 
 </script>
