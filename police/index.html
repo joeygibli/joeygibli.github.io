@@ -17,10 +17,16 @@
   .x_axis path {
     opacity: 0;
   }
+  thin {
+    font-weight: lighter;
+    font-style: italic;
+    font-size: 12px;
+  }
 
 </style>
 
 <body>
+<p>This visualization is still in beta and is best experienced on desktop/laptop. Data source: <a href="https://github.com/washingtonpost/data-police-shootings" target="_blank">Washington Post</a></p>
 <div id="option">
   X-Axis: <select id="selectorX" onchange="updateX()">
     <option value="race">Race</option>
@@ -34,9 +40,9 @@
     <option value="date">Day of Week</option>
     <option value="age">Age</option>
   </select>
-  Notes: ages start at 12, and days of week start on Sunday, city (pop. > 100,000) on left and rural on right
+  Notes: Days of week start on Sunday, City (pop. > 100,000) on left and Rural on right
 </div>
-<input type="checkbox" id="normalize" onclick="normalize()">Normalize <i>Size of circle corresponds to likelihood of being killed relative to white</i>
+<input type="checkbox" id="normalize" onclick="normalize()">Normalize <thin>Size of circle corresponds to likelihood of being killed relative to white based on 2010 U.S. Census population data</thin>
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script>
 
