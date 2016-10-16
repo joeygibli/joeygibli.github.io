@@ -288,9 +288,7 @@ function updateY() {
 d3.select("#normalize").on("change", function(d) {
   var checked = d3.select(this).property("checked");
   var newR = 0;
-  console.log("check?");
   if (checked) {
-    console.log("CHECK!")
     nodes.forEach(function(d,i) {
       if (d.race == "White") {
         newR = 2
