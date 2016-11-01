@@ -175,13 +175,7 @@ var matrix = d3.select("#matrix").append("svg")
 	.attr("width",(2*data[0].length*(1.5+side)))
 	.attr("height",(2*data.length*(1.5+side)))
 	.append("g");
-
-matrix.append("rect")
-		.attr("width",(data[0].length*(1.5+side)))
-		.attr("height",(data.length*(1.5+side)))
-		.attr("fill","white");
-
-
+	
 var dim = drawSquareMatrix(data,side,matrix);
 
 var vertical_tree =d3.select("#side_tree")
