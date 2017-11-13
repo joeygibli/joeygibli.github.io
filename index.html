@@ -48,6 +48,10 @@ a {
   color: black;
 }
 
+body {
+
+}
+
 .nav{
     list-style:none;
     margin:8px 0px 0px;
@@ -111,10 +115,6 @@ a {
   list-style-type: none;
 }
 
-.blurb {
-  padding-bottom: 50px;
-}
-
 .images {
     text-align: center;
 }
@@ -127,6 +127,17 @@ a {
     content: '';
     display: inline-block;
     width: 80%;
+}
+
+.artpiece {
+	margin: auto;
+	text-align: center;
+}
+
+.artpiece img {
+	width: 100%;
+	border: solid;
+	border-color: white;
 }
 
 strong {
@@ -144,14 +155,14 @@ strong {
 <ul class=nav>
     <li><a href="Joseph Gibli Resume.pdf">Resume</a></li>
     <li><a href="#projects">Projects</a></li>
-    <li><a href="#stories">Stories</a></li>
+    <li><a href="#artwork">Creations</a></li>
 </ul>
 
 <div class="section">
   <div class="images">
     <a href="#projects"><img src="img/analytics.svg" width="60px" alt="Analytics"/></a>
     <a href="#projects"><img src="img/brain.svg" width="60px" alt="Machine Learning"/></a>
-    <a href="#stories"><img src="img/pencil.svg" width="60px" alt="Pencil" /></a>
+    <a href="#artwork"><img src="img/pencil.svg" width="60px" alt="Pencil" /></a>
   </div>
   <h1>Welcome</h1>
   <p>My name is <strong>Joseph Gibli</strong> and I go to Carnegie Mellon University. I'm majoring in Statistics and Machine Learning, and on track to double in Computer Science.</p>
@@ -175,17 +186,6 @@ strong {
 <p>This project has taught me how to apply machine learning theory and build on ideas learned in the classroom. I also learned how to assess and present findings to a team.</p>
 </div>
 
-<img src="img/snail-shell.svg"/ alt="Shell">
-<h2>ShellLab</h2>
-<div class="blurb">
-<p>Course project for Introduction to Computer Systems (<a href="http://cs.cmu.edu/~213" target="_blank">15-213</a>). I wrote a terminal shell entirely in <b>C</b> that managed job processes, signals, and file input/output.</p>
-<p>This was one of my favorite labs in the course because I developed something that I could interact with, but understand at the low level.</p>
-</div>
-
-<img src="img/wall.svg"/ alt="Bricks">
-<h2>CacheLab</h2>
-<p>Another course project for Introduction to Computer Systems (<a href="http://cs.cmu.edu/~213" target="_blank">15-213</a>). I wrote an LRU cache simulator in <b>C</b> that would take in a trace file and dynamically allocate and free cache memory.</p>
-<p>I thought this was such an interesting lab! I learned at a deeper level how to strategically access memory for efficency and organize my code for readability.</p>
 </div>
 
 <div class="section" id="dataviz">
@@ -197,14 +197,17 @@ strong {
 <p>I wanted to develop an unbiased, interactive, high dimensional look at individuals killed by police. Of course, circles on a screen cannot possibly tell the whole story. This tool reflects numbers, not opinions.</p>
 </div>
 
+<div class="section" id="artwork">
+<h1>Creations</h1>
+<div class="artpiece">
+<a href="./img/cost_of_happiness.png"><img src="img/cost_of_happiness.png" align = "middle"></a>
+<p><a href="./img/cost_of_happiness.png"><strong>Cost of Happiness</strong></a> – Each rectangle corresponds to a country and are ordered from left to right by happiness. The width is proportional to GDP per capita and are colored by Happiness Index, with the median colored azure.</p>
+<p>This piece aims to be a generative art piece to reflect on the correlations and exceptions to the phrase "money does not buy happiness."</p>
 </div>
-
-<div class="section" id="stories">
-<h1>Short Stories</h1>
-<p>Underconstruction... check back soon!</p>
 </div>
 
 <p class="cite">Built and designed by Joseph Gibli. Icons from <a href="http://flaticon.com" target="_blank">FlatIcon</a></p>
 </body>
+
 
 </html>

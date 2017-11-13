@@ -42,6 +42,11 @@
   </select>
   Notes: Days of week start on Sunday, City (pop. > 100,000) on left and Rural on right
 </div>
+
+<div id = "visualization">
+</div>
+
+
 <input type="checkbox" id="normalize" onclick="normalize()">Normalize <thin>Size of circle corresponds to likelihood of being killed relative to white based on 2010 U.S. Census population data</thin>
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script>
@@ -58,7 +63,7 @@ var n = 800, // total number of nodes
 var force = d3.layout.force();
 var color = d3.scale.ordinal()
   .domain(races)
-  .range(["#EBB312","#D03B30","#53A96A","#DBCF4E","#C390C7","#B98A37","#1FACB8"]);
+  .range(["#EBB312","#FFB6C1","#53A96A","#DBCF4E","#C390C7","#B98A37","#1FACB8"]);
 
 var x = d3.scale.ordinal()
   .domain(races)
@@ -135,7 +140,7 @@ force
   .on("tick", tick)
   .start();
 
-var svg = d3.select("body").append("svg")
+var svg = d3.select("#visualization").append("svg")
   .attr("width", width)
   .attr("height", height);
 
@@ -244,6 +249,7 @@ function updateX() {
     nodes.forEach(function(d,i) {
       d.cx = dateX(d.date.getDay());
     });
+    updateXAxis();
   } else if (string == "age") {
     nodes.forEach(function(d,i) {
       var cx = ageX(d.age);
@@ -283,6 +289,10 @@ function updateY() {
   }
   force.alpha(1)
     .friction(.8);
+}
+
+function updateXAxis() {
+	svg.selectAll(".x_axis").remove();
 }
 
 d3.select("#normalize").on("change", function(d) {
